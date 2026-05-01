@@ -26,8 +26,8 @@ public class User extends BaseAuditEntity {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Enum<Role> role;
+    private Role role;
 
     @Column
-    private Boolean active;
+    private Boolean active = true;
 }
