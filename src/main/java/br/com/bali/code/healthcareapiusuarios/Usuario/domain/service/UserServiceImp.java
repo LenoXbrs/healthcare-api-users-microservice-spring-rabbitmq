@@ -17,7 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -70,7 +72,12 @@ public class UserServiceImp implements UserService {
             throw new RuntimeException("Senha inválida");
         }
 
-        String token = jwtService.generateToken(user.getEmail());
+        // Inclui a role nos claims para que outros serviços possam validar
+        // sem precisar chamar a api-usuarios (princípio de autonomia)
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("role", user.getRole().name());
+
+        String token = jwtService.generateToken(extraClaims, user.getEmail());
 
         // Guardar no Redis com TTL de 1h
         redisTemplate.opsForValue().set("token:" + user.getEmail(), token, 1, TimeUnit.HOURS);
