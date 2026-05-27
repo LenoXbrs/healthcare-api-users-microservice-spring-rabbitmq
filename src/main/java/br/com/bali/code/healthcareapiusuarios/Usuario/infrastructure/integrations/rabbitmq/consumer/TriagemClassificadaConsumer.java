@@ -26,8 +26,8 @@ public class TriagemClassificadaConsumer {
         log.info("[triagem.classificada] Recebida: medicoId={} prioridade={}",
                 payload.medicoId(), payload.prioridade());
 
-        notificationService.notifyDoctor(payload);
+        notificationService.notificarMedicoTriagemClassificada(payload);
 
-        log.info("[triagem.classificada] Notificação enviada para medicoId={}", payload.medicoId());
+        log.info("[triagem.classificada] Notificação enfileirada para medicoId={}", payload.medicoId());
     }
 }

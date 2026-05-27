@@ -1,8 +1,10 @@
 package br.com.bali.code.healthcareapiusuarios.Usuario.infrastructure.integrations.rabbitmq.dto;
 
-public record TriagemClassificadaPayload(
+public record TriagemFinalizadaPayload(
         Long triagemId,
-        Long medicoId,
+        Long pacienteId,
         String pacienteNome,
-        String prioridade
+        Long enfermeiroId,
+        Long medicoId,
+        String status
 ) {}

@@ -6,34 +6,27 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configuração RabbitMQ da api-usuarios.
- *
- * Princípios aplicados:
- * - Cada serviço declara as filas que CONSOME (triagem.classificada)
- * - Filas durable=true: sobrevivem a restarts do broker
- * - DLQ configurada: falhas de notificação não perdem mensagens
- * - Exchange declarada aqui pois este serviço precisa garantir sua existência
+ * Filas de notificação consumidas pela api-usuarios (eventos publicados pela api-triagem).
  */
 @Configuration
 public class RabbitMQConfig {
 
-    // ── Fila consumida por este serviço ────────────────────────────────────
+    public static final String EXCHANGE_TRIAGEM = "triagem.exchange";
+    public static final String EXCHANGE_DLQ     = "dlq.exchange";
+
+    public static final String QUEUE_TRIAGEM_CRIADA           = "triagem.criada";
+    public static final String QUEUE_TRIAGEM_CRIADA_DLQ       = "triagem.criada.dlq";
     public static final String QUEUE_TRIAGEM_CLASSIFICADA     = "triagem.classificada";
     public static final String QUEUE_TRIAGEM_CLASSIFICADA_DLQ = "triagem.classificada.dlq";
+    public static final String QUEUE_TRIAGEM_FINALIZADA       = "triagem.finalizada";
+    public static final String QUEUE_TRIAGEM_FINALIZADA_DLQ   = "triagem.finalizada.dlq";
 
-    // ── Exchange de entrada (publicada pela api-triagem) ──────────────────
-    public static final String EXCHANGE_TRIAGEM               = "triagem.exchange";
-
-    // ── Exchange de DLQ ───────────────────────────────────────────────────
-    public static final String EXCHANGE_DLQ                   = "dlq.exchange";
-
-    // ── Routing keys ──────────────────────────────────────────────────────
-    public static final String RK_TRIAGEM_CLASSIFICADA        = "triagem.classificada";
-    public static final String RK_TRIAGEM_CLASSIFICADA_DLQ    = "triagem.classificada.dlq";
-
-    // ────────────────────────────────────────────────────────────────────────
-    // Exchanges
-    // ────────────────────────────────────────────────────────────────────────
+    public static final String RK_TRIAGEM_CRIADA           = "triagem.criada";
+    public static final String RK_TRIAGEM_CRIADA_DLQ       = "triagem.criada.dlq";
+    public static final String RK_TRIAGEM_CLASSIFICADA     = "triagem.classificada";
+    public static final String RK_TRIAGEM_CLASSIFICADA_DLQ = "triagem.classificada.dlq";
+    public static final String RK_TRIAGEM_FINALIZADA       = "triagem.finalizada";
+    public static final String RK_TRIAGEM_FINALIZADA_DLQ   = "triagem.finalizada.dlq";
 
     @Bean
     public DirectExchange triagemExchange() {
@@ -45,9 +38,30 @@ public class RabbitMQConfig {
         return ExchangeBuilder.directExchange(EXCHANGE_DLQ).durable(true).build();
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Dead Letter Queue para notificações falhas
-    // ────────────────────────────────────────────────────────────────────────
+    @Bean
+    public Queue triagemCriadaQueue() {
+        return queueWithDlq(QUEUE_TRIAGEM_CRIADA, RK_TRIAGEM_CRIADA_DLQ);
+    }
+
+    @Bean
+    public Queue triagemCriadaDlq() {
+        return QueueBuilder.durable(QUEUE_TRIAGEM_CRIADA_DLQ).build();
+    }
+
+    @Bean
+    public Binding triagemCriadaBinding(Queue triagemCriadaQueue, DirectExchange triagemExchange) {
+        return BindingBuilder.bind(triagemCriadaQueue).to(triagemExchange).with(RK_TRIAGEM_CRIADA);
+    }
+
+    @Bean
+    public Binding triagemCriadaDlqBinding(Queue triagemCriadaDlq, DirectExchange dlqExchange) {
+        return BindingBuilder.bind(triagemCriadaDlq).to(dlqExchange).with(RK_TRIAGEM_CRIADA_DLQ);
+    }
+
+    @Bean
+    public Queue triagemClassificadaQueue() {
+        return queueWithDlq(QUEUE_TRIAGEM_CLASSIFICADA, RK_TRIAGEM_CLASSIFICADA_DLQ);
+    }
 
     @Bean
     public Queue triagemClassificadaDlq() {
@@ -55,38 +69,44 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding dlqBinding(Queue triagemClassificadaDlq, DirectExchange dlqExchange) {
-        return BindingBuilder.bind(triagemClassificadaDlq)
-                .to(dlqExchange)
-                .with(RK_TRIAGEM_CLASSIFICADA_DLQ);
-    }
-
-    // ────────────────────────────────────────────────────────────────────────
-    // Fila principal — aponta para DLQ em caso de falha
-    // ────────────────────────────────────────────────────────────────────────
-
-    @Bean
-    public Queue triagemClassificadaQueue() {
-        return QueueBuilder.durable(QUEUE_TRIAGEM_CLASSIFICADA)
-                .withArgument("x-dead-letter-exchange", EXCHANGE_DLQ)
-                .withArgument("x-dead-letter-routing-key", RK_TRIAGEM_CLASSIFICADA_DLQ)
-                .build();
+    public Binding triagemClassificadaBinding(Queue triagemClassificadaQueue, DirectExchange triagemExchange) {
+        return BindingBuilder.bind(triagemClassificadaQueue).to(triagemExchange).with(RK_TRIAGEM_CLASSIFICADA);
     }
 
     @Bean
-    public Binding triagemClassificadaBinding(Queue triagemClassificadaQueue,
-                                               DirectExchange triagemExchange) {
-        return BindingBuilder.bind(triagemClassificadaQueue)
-                .to(triagemExchange)
-                .with(RK_TRIAGEM_CLASSIFICADA);
+    public Binding triagemClassificadaDlqBinding(Queue triagemClassificadaDlq, DirectExchange dlqExchange) {
+        return BindingBuilder.bind(triagemClassificadaDlq).to(dlqExchange).with(RK_TRIAGEM_CLASSIFICADA_DLQ);
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Serialização JSON
-    // ────────────────────────────────────────────────────────────────────────
+    @Bean
+    public Queue triagemFinalizadaQueue() {
+        return queueWithDlq(QUEUE_TRIAGEM_FINALIZADA, RK_TRIAGEM_FINALIZADA_DLQ);
+    }
+
+    @Bean
+    public Queue triagemFinalizadaDlq() {
+        return QueueBuilder.durable(QUEUE_TRIAGEM_FINALIZADA_DLQ).build();
+    }
+
+    @Bean
+    public Binding triagemFinalizadaBinding(Queue triagemFinalizadaQueue, DirectExchange triagemExchange) {
+        return BindingBuilder.bind(triagemFinalizadaQueue).to(triagemExchange).with(RK_TRIAGEM_FINALIZADA);
+    }
+
+    @Bean
+    public Binding triagemFinalizadaDlqBinding(Queue triagemFinalizadaDlq, DirectExchange dlqExchange) {
+        return BindingBuilder.bind(triagemFinalizadaDlq).to(dlqExchange).with(RK_TRIAGEM_FINALIZADA_DLQ);
+    }
 
     @Bean
     public JacksonJsonMessageConverter jacksonJsonMessageConverter() {
         return new JacksonJsonMessageConverter();
+    }
+
+    private static Queue queueWithDlq(String queueName, String dlqRoutingKey) {
+        return QueueBuilder.durable(queueName)
+                .withArgument("x-dead-letter-exchange", EXCHANGE_DLQ)
+                .withArgument("x-dead-letter-routing-key", dlqRoutingKey)
+                .build();
     }
 }
