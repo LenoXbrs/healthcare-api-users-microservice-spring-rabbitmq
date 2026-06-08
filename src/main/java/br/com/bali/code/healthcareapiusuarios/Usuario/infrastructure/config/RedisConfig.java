@@ -14,9 +14,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.bali.code.healthcareapiusuarios.Usuario.api.model.response.UserResponse;
 import java.util.List;
-
-import java.time.Duration;
 import java.util.HashMap;
+import java.time.Duration;
 import java.util.Map;
 
 @Configuration
@@ -24,7 +23,8 @@ import java.util.Map;
 public class RedisConfig {
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory, ObjectMapper objectMapper) {
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory,
+                                                        ObjectMapper objectMapper) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());

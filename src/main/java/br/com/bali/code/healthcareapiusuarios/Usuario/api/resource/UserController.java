@@ -8,7 +8,6 @@ import br.com.bali.code.healthcareapiusuarios.Usuario.api.model.response.Registe
 import br.com.bali.code.healthcareapiusuarios.Usuario.api.model.response.UserResponse;
 import br.com.bali.code.healthcareapiusuarios.Usuario.application.Role;
 import br.com.bali.code.healthcareapiusuarios.Usuario.domain.service.UserService;
-import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,31 +25,26 @@ public class UserController {
     }
 
     @PostMapping
-    @Operation(summary = "Cadastrar um novo usuário")
     public ResponseEntity<RegisterUserResponse> register(@RequestBody @Valid RegisterUserRequest request) {
         return ResponseEntity.ok(userService.register(request));
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Login do usuário")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         return ResponseEntity.ok(userService.login(request));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar usuário por ID")
     public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getById(id));
     }
 
     @GetMapping
-    @Operation(summary = "Listar usuários por role")
     public ResponseEntity<List<UserResponse>> listByRole(@RequestParam Role role) {
         return ResponseEntity.ok(userService.listByRole(role));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar usuário")
     public ResponseEntity<UserResponse> update(@PathVariable Long id, @RequestBody @Valid UpdateUserRequest request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
