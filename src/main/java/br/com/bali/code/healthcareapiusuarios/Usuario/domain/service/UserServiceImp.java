@@ -108,13 +108,13 @@ public class UserServiceImp implements UserService {
     @Override
     @Cacheable(value = "medicos", key = "#role")
     public List<UserResponse> listByRole(Role role) {
-        return userRepository.findByRole(role).stream()
+        return userRepository.findByRoleAndActiveTrue(role).stream()
                 .map(user -> new UserResponse(
                         user.getId(),
                         user.getName(),
                         null, // User only wants id, nome, role in listing
                         user.getRole(),
-                        null
+                        user.getActive()
                 ))
                 .collect(Collectors.toList());
     }

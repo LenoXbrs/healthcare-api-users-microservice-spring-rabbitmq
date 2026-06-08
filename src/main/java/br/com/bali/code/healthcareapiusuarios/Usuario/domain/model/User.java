@@ -3,6 +3,7 @@ package br.com.bali.code.healthcareapiusuarios.Usuario.domain.model;
 import br.com.bali.code.healthcareapiusuarios.Usuario.application.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "tb_users")
 @Data
 @Builder
 @AllArgsConstructor
